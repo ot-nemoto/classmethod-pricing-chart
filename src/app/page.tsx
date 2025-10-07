@@ -1,7 +1,5 @@
 "use client";
 
-import type { Chart as ChartJS } from "chart.js";
-import Chart from "chart.js/auto";
 import * as Papa from "papaparse";
 import {
   type ChangeEvent,
@@ -12,6 +10,11 @@ import {
   useRef,
   useState,
 } from "react";
+import AccountSelector from "@/components/AccountSelector";
+import MonthSelector from "@/components/MonthSelector";
+import ServiceSelector from "@/components/ServiceSelector";
+import StackedBarChart from "@/components/StackedBarChart";
+import UploadPanel from "@/components/UploadPanel";
 
 type MonthlyReport = {
   month: string;
@@ -121,112 +124,7 @@ const parseMonthlyReport = (file: File): Promise<ParseSuccess> =>
     });
   });
 
-const generateColor = (index: number) => {
-  const hue = (index * 59) % 360;
-  return `hsl(${hue} 70% 52%)`;
-};
-
-function StackedBarChart({
-  data,
-  services,
-}: {
-  data: ChartRow[];
-  services: string[];
-}) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const chartRef = useRef<ChartJS | null>(null);
-
-  const colors = useMemo(
-    () => services.map((_, index) => generateColor(index)),
-    [services],
-  );
-
-  useEffect(() => {
-    const canvasElement = canvasRef.current;
-
-    if (!canvasElement) {
-      return;
-    }
-
-    if (chartRef.current) {
-      chartRef.current.destroy();
-      chartRef.current = null;
-    }
-
-    if (data.length === 0 || services.length === 0) {
-      return;
-    }
-
-    const chart = new Chart(canvasElement, {
-      type: "bar",
-      data: {
-        labels: data.map((row) => row.month),
-        datasets: services.map((service, index) => ({
-          label: service,
-          data: data.map((row) => Number(row.services[service] ?? 0)),
-          backgroundColor: colors[index],
-          borderColor: colors[index],
-          borderWidth: 1,
-        })),
-      },
-      options: {
-        maintainAspectRatio: false,
-        responsive: true,
-        scales: {
-          x: {
-            stacked: true,
-            ticks: {
-              autoSkip: false,
-            },
-          },
-          y: {
-            stacked: true,
-            ticks: {
-              callback(value) {
-                return currencyFormatter.format(Number(value));
-              },
-            },
-            beginAtZero: true,
-          },
-        },
-        plugins: {
-          legend: {
-            position: "bottom",
-            labels: {
-              boxHeight: 12,
-              boxWidth: 12,
-            },
-          },
-          tooltip: {
-            callbacks: {
-              label(context) {
-                const label = context.dataset.label ?? "";
-                const rawValue = context.parsed.y ?? 0;
-                return `${label}: ${currencyFormatter.format(rawValue)}`;
-              },
-              footer(items) {
-                const total = items.reduce(
-                  (sum, item) => sum + (item.parsed.y ?? 0),
-                  0,
-                );
-                return `合計: ${currencyFormatter.format(total)}`;
-              },
-            },
-          },
-        },
-      },
-    });
-
-    chartRef.current = chart;
-
-    return () => {
-      chart.destroy();
-      chartRef.current = null;
-    };
-  }, [colors, data, services]);
-
-  return <canvas ref={canvasRef} className="h-full w-full" />;
-}
+// chart rendering moved to components/StackedBarChart
 
 export default function Home() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -676,6 +574,20 @@ export default function Home() {
             )}
           </div>
         </section>
+        <UploadPanel
+          fileInputRef={fileInputRef}
+          onFileChange={handleFileSelection}
+          onBrowseClick={handleBrowseClick}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          isDragActive={isDragActive}
+          isParsing={isParsing}
+          errorMessage={errorMessage}
+          warnings={warnings}
+          sortedMonths={sortedMonths}
+          onClearReports={clearReports}
+        />
 
         <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-inner shadow-slate-950/50">
           <div className="flex flex-col gap-6">
@@ -700,169 +612,35 @@ export default function Home() {
               </div>
 
               <div className="flex-shrink-0 flex items-start gap-3">
-                <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 w-56">
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm text-slate-300">アカウント</div>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={selectAllAccounts}
-                        className="rounded-md px-2 py-1 text-xs font-medium text-slate-200 border border-slate-800 bg-slate-900/30"
-                      >
-                        全部
-                      </button>
-                      <button
-                        type="button"
-                        onClick={clearSelectedAccounts}
-                        className="rounded-md px-2 py-1 text-xs font-medium text-slate-200 border border-slate-800 bg-slate-900/10"
-                      >
-                        解除
-                      </button>
-                    </div>
-                  </div>
-                  <div className="mt-3">
-                    <input
-                      value={accountFilter}
-                      onChange={(e) => setAccountFilter(e.target.value)}
-                      placeholder="検索..."
-                      className="w-full rounded-md border border-slate-800 bg-slate-900/40 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-400"
-                    />
-                  </div>
-                  <div className="mt-3 max-h-36 overflow-y-auto">
-                    <ul className="space-y-2">
-                      {filteredAccounts.map((acc) => {
-                        const checked = selectedAccounts.includes(acc);
-                        return (
-                          <li key={acc} className="flex items-center">
-                            <label className="flex items-center gap-3 text-sm text-slate-200">
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                onChange={() => toggleAccount(acc)}
-                                className="h-4 w-4 rounded border-slate-700 bg-slate-800 text-indigo-500 focus:ring-indigo-400"
-                              />
-                              <span className="truncate max-w-[12rem]">
-                                {acc}
-                              </span>
-                            </label>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                </div>
+                <AccountSelector
+                  filteredAccounts={filteredAccounts}
+                  selectedAccounts={selectedAccounts}
+                  toggleAccount={toggleAccount}
+                  selectAllAccounts={selectAllAccounts}
+                  clearSelectedAccounts={clearSelectedAccounts}
+                  accountFilter={accountFilter}
+                  setAccountFilter={setAccountFilter}
+                />
                 {/* latest month display removed per request */}
-
-                <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 w-72">
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm text-slate-300">サービスを選択</div>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={selectAllServices}
-                        className="rounded-md px-2 py-1 text-xs font-medium text-slate-200 border border-slate-800 bg-slate-900/30"
-                      >
-                        全部
-                      </button>
-                      <button
-                        type="button"
-                        onClick={selectTop10}
-                        className="rounded-md px-2 py-1 text-xs font-medium text-slate-200 border border-slate-800 bg-indigo-500/10"
-                      >
-                        Top10
-                      </button>
-                      <button
-                        type="button"
-                        onClick={clearSelectedServices}
-                        className="rounded-md px-2 py-1 text-xs font-medium text-slate-200 border border-slate-800 bg-slate-900/10"
-                      >
-                        解除
-                      </button>
-                    </div>
-                  </div>
-                  <div className="mt-3">
-                    <input
-                      value={serviceFilter}
-                      onChange={(e) => setServiceFilter(e.target.value)}
-                      placeholder="検索..."
-                      className="w-full rounded-md border border-slate-800 bg-slate-900/40 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-400"
-                    />
-                  </div>
-                  <div className="mt-3 max-h-36 overflow-y-auto">
-                    <ul className="space-y-2">
-                      {filteredServices.map((service) => {
-                        const checked = selectedServices.includes(service);
-                        return (
-                          <li key={service} className="flex items-center">
-                            <label className="flex items-center gap-3 text-sm text-slate-200">
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                onChange={() => toggleService(service)}
-                                className="h-4 w-4 rounded border-slate-700 bg-slate-800 text-indigo-500 focus:ring-indigo-400"
-                              />
-                              <span className="truncate max-w-[14rem]">
-                                {service}
-                              </span>
-                            </label>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 w-48">
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm text-slate-300">年月を選択</div>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={selectAllMonths}
-                        className="rounded-md px-2 py-1 text-xs font-medium text-slate-200 border border-slate-800 bg-slate-900/30"
-                      >
-                        全部
-                      </button>
-                      <button
-                        type="button"
-                        onClick={clearSelectedMonths}
-                        className="rounded-md px-2 py-1 text-xs font-medium text-slate-200 border border-slate-800 bg-slate-900/10"
-                      >
-                        解除
-                      </button>
-                    </div>
-                  </div>
-                  <div className="mt-3">
-                    <input
-                      value={monthFilter}
-                      onChange={(e) => setMonthFilter(e.target.value)}
-                      placeholder="検索..."
-                      className="w-full rounded-md border border-slate-800 bg-slate-900/40 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-400"
-                    />
-                  </div>
-                  <div className="mt-3 max-h-36 overflow-y-auto">
-                    <ul className="space-y-2">
-                      {filteredMonths.map((month) => {
-                        const checked = selectedMonths.includes(month);
-                        return (
-                          <li key={month} className="flex items-center gap-3">
-                            <label className="flex items-center gap-3 text-sm text-slate-200">
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                onChange={() => toggleMonth(month)}
-                                className="h-4 w-4 rounded border-slate-700 bg-slate-800 text-indigo-500 focus:ring-indigo-400"
-                              />
-                              <span className="truncate max-w-[9rem]">
-                                {month}
-                              </span>
-                            </label>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                </div>
+                <ServiceSelector
+                  filteredServices={filteredServices}
+                  selectedServices={selectedServices}
+                  toggleService={toggleService}
+                  selectAllServices={selectAllServices}
+                  selectTop10={selectTop10}
+                  clearSelectedServices={clearSelectedServices}
+                  serviceFilter={serviceFilter}
+                  setServiceFilter={setServiceFilter}
+                />
+                <MonthSelector
+                  filteredMonths={filteredMonths}
+                  selectedMonths={selectedMonths}
+                  toggleMonth={toggleMonth}
+                  selectAllMonths={selectAllMonths}
+                  clearSelectedMonths={clearSelectedMonths}
+                  monthFilter={monthFilter}
+                  setMonthFilter={setMonthFilter}
+                />
               </div>
             </div>
 
@@ -877,6 +655,8 @@ export default function Home() {
                   <StackedBarChart
                     data={filteredChartData}
                     services={displayedServices}
+                    onLegendClick={toggleService}
+                    showLegend={false}
                   />
                 </div>
               )}
