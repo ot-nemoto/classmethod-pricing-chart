@@ -1,0 +1,36 @@
+{
+  // TypeScript/JavaScript インポートの自動ソート設定
+  "typescript.preferences.organizeImports": {
+    "sortByNames": true,
+    "sortNamedImports": true,
+    "sortImports": true
+  },
+
+  // ファイル保存時の自動アクション
+  "editor.codeActionsOnSave": {
+    "source.organizeImports.biome": "explicit",
+    "source.fixAll.biome": "explicit"
+  },
+
+  // 自動フォーマット設定
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+
+  // TypeScript/JSX ファイルのデフォルトフォーマッター (Biome使用)
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+
+  // インポート候補の設定
+  "typescript.suggest.autoImports": true,
+  "typescript.preferences.includePackageJsonAutoImports": "auto"
+}
