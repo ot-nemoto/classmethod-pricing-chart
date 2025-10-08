@@ -22,7 +22,7 @@ export default function ServiceSelector({
   setServiceFilter: Dispatch<SetStateAction<string>>;
 }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 w-72">
+    <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 w-full">
       <div className="flex items-center justify-between">
         <div className="text-sm text-slate-300">サービスを選択</div>
         <div className="flex gap-2">

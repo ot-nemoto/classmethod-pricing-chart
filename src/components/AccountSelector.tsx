@@ -20,9 +20,9 @@ export default function AccountSelector({
   setAccountFilter: Dispatch<SetStateAction<string>>;
 }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 w-56">
+    <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 w-full">
       <div className="flex items-center justify-between">
-        <div className="text-sm text-slate-300">アカウント</div>
+        <div className="text-sm text-slate-300">アカウントを選択</div>
         <div className="flex gap-2">
           <button
             type="button"
