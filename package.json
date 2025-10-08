@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:static": "cross-env BUILD_MODE=static next build",
     "start": "next start",
     "lint": "biome check",
     "format": "biome format --write"
@@ -24,6 +25,7 @@
     "@types/react-dom": "^19",
     "@tailwindcss/postcss": "^4",
     "tailwindcss": "^4",
-    "@biomejs/biome": "2.2.0"
+    "@biomejs/biome": "2.2.0",
+    "cross-env": "7.0.3"
   }
 }
