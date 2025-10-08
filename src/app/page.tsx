@@ -388,6 +388,9 @@ export default function Home() {
     "service",
   );
 
+  // time unit: 'month' or 'year' (controls whether chart groups by month or by year)
+  const [timeUnit, setTimeUnit] = useState<"month" | "year">("month");
+
   // series names for the chart depending on mode
   const displayedSeries = useMemo(() => {
     if (aggregationMode === "service") return displayedServices;
@@ -455,13 +458,92 @@ export default function Home() {
     });
   }, [reportsByMonth, sortedMonths, selectedServices]);
 
+  // yearly aggregation for services (group selected months into years)
+  const yearlyServiceChartData = useMemo<ChartRow[]>(() => {
+    // if no months selected, return empty
+    if (!displayedMonths || displayedMonths.length === 0) return [];
+    const years: Record<string, Record<string, number>> = {};
+    const allowedAccounts = new Set(selectedAccounts);
+    const allowedServices = new Set(selectedServices);
+
+    for (const month of displayedMonths) {
+      const year = month.split("-")[0];
+      const arr = reportsByMonth[month] ?? [];
+      if (!years[year]) years[year] = {};
+      for (const report of arr) {
+        const key = report.accountId ?? report.fileName;
+        if (selectedAccounts.length > 0 && !allowedAccounts.has(key)) continue;
+        // sum services (respect selectedServices: if none selected, sum 0)
+        if (selectedServices.length > 0) {
+          Object.entries(report.services).forEach(([svc, cost]) => {
+            if (!allowedServices.has(svc)) return;
+            years[year][svc] = (years[year][svc] ?? 0) + (cost as number);
+          });
+        }
+      }
+    }
+
+    // convert to ChartRow[] with year labels
+    return Object.keys(years)
+      .sort()
+      .map((yr) => ({ month: yr, services: years[yr] }));
+  }, [reportsByMonth, displayedMonths, selectedAccounts, selectedServices]);
+
+  // yearly aggregation for accounts (per-year totals per account)
+  const yearlyAccountChartData = useMemo<ChartRow[]>(() => {
+    if (!displayedMonths || displayedMonths.length === 0) return [];
+    const years: Record<string, Record<string, number>> = {};
+    const allowedServices = new Set(selectedServices);
+
+    for (const month of displayedMonths) {
+      const year = month.split("-")[0];
+      const arr = reportsByMonth[month] ?? [];
+      if (!years[year]) years[year] = {};
+      for (const report of arr) {
+        const key = report.accountId ?? report.fileName;
+        let sum = 0;
+        if (selectedServices.length > 0) {
+          Object.entries(report.services).forEach(([svc, cost]) => {
+            if (!allowedServices.has(svc)) return;
+            sum += cost as number;
+          });
+        }
+        years[year][key] = (years[year][key] ?? 0) + sum;
+      }
+    }
+
+    return Object.keys(years)
+      .sort()
+      .map((yr) => ({ month: yr, services: years[yr] }));
+  }, [reportsByMonth, displayedMonths, selectedServices]);
+
   // filter chartData by selected months and aggregation mode
   const filteredChartData = useMemo(() => {
     if (displayedMonths.length === 0) return [];
-    const setMonths = new Set(displayedMonths);
-    const source = aggregationMode === "service" ? chartData : accountChartData;
-    return source.filter((row) => setMonths.has(row.month));
-  }, [chartData, accountChartData, displayedMonths, aggregationMode]);
+
+    if (timeUnit === "month") {
+      const setMonths = new Set(displayedMonths);
+      const source =
+        aggregationMode === "service" ? chartData : accountChartData;
+      return source.filter((row) => setMonths.has(row.month));
+    }
+
+    // year mode: build a set of years from displayedMonths and use yearly sources
+    const setYears = new Set(displayedMonths.map((m) => m.split("-")[0]));
+    const source =
+      aggregationMode === "service"
+        ? yearlyServiceChartData
+        : yearlyAccountChartData;
+    return source.filter((row) => setYears.has(row.month));
+  }, [
+    chartData,
+    accountChartData,
+    displayedMonths,
+    aggregationMode,
+    timeUnit,
+    yearlyServiceChartData,
+    yearlyAccountChartData,
+  ]);
 
   /*
   const yearlyAggregation = useMemo(() => {
@@ -608,6 +690,32 @@ export default function Home() {
                     className="h-4 w-4"
                   />
                   <span className="text-slate-300">アカウント別</span>
+                </label>
+              </div>
+
+              {/* time unit radio: month / year */}
+              <div className="mt-3 flex items-center gap-4">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="timeUnit"
+                    value="month"
+                    checked={timeUnit === "month"}
+                    onChange={() => setTimeUnit("month")}
+                    className="h-4 w-4"
+                  />
+                  <span className="text-slate-300">月次</span>
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="timeUnit"
+                    value="year"
+                    checked={timeUnit === "year"}
+                    onChange={() => setTimeUnit("year")}
+                    className="h-4 w-4"
+                  />
+                  <span className="text-slate-300">年次</span>
                 </label>
               </div>
 
