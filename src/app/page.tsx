@@ -438,13 +438,22 @@ export default function Home() {
     return sortedMonths.map((month) => {
       const arr = reportsByMonth[month] ?? [];
       const accountsMap: Record<string, number> = {};
+      const allowedServices = new Set(selectedServices);
       (arr ?? []).forEach((r) => {
         const key = r.accountId ?? r.fileName;
-        accountsMap[key] = (accountsMap[key] ?? 0) + (r.total ?? 0);
+        let sum = 0;
+        // If no services are selected, don't include any service costs (sum stays 0).
+        if (selectedServices.length > 0) {
+          Object.entries(r.services).forEach(([svc, cost]) => {
+            if (!allowedServices.has(svc)) return;
+            sum += cost as number;
+          });
+        }
+        accountsMap[key] = (accountsMap[key] ?? 0) + sum;
       });
       return { month, services: accountsMap };
     });
-  }, [reportsByMonth, sortedMonths]);
+  }, [reportsByMonth, sortedMonths, selectedServices]);
 
   // filter chartData by selected months and aggregation mode
   const filteredChartData = useMemo(() => {
@@ -508,9 +517,17 @@ export default function Home() {
             sum += Number(report.services[service] ?? 0);
           }
         } else {
-          // account mode: count whole report.total for matching accounts
+          // account mode: sum only selected services for this account
+          const allowedServices = new Set(selectedServices);
+          let accSum = 0;
+          if (selectedServices.length > 0) {
+            Object.entries(report.services).forEach(([svc, cost]) => {
+              if (!allowedServices.has(svc)) return;
+              accSum += Number(cost ?? 0);
+            });
+          }
           if (displayedSeries.includes(key)) {
-            sum += Number(report.total ?? 0);
+            sum += accSum;
           }
         }
       }
@@ -522,7 +539,10 @@ export default function Home() {
     displayedSeries,
     selectedAccounts,
     aggregationMode,
+    selectedServices,
   ]);
+  // include selectedServices so account-mode totals update when services toggled
+  // include selectedServices so account-mode totals update when services toggled
 
   return (
     <div className="min-h-screen bg-slate-950 pb-16 text-slate-100">
