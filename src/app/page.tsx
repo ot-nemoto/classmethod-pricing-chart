@@ -383,6 +383,18 @@ export default function Home() {
     return selectedServices;
   }, [selectedServices]);
 
+  // aggregation mode: 'service' (default) or 'account'
+  const [aggregationMode, setAggregationMode] = useState<"service" | "account">(
+    "service",
+  );
+
+  // series names for the chart depending on mode
+  const displayedSeries = useMemo(() => {
+    if (aggregationMode === "service") return displayedServices;
+    // account mode: use selectedAccounts (preserve order)
+    return selectedAccounts;
+  }, [aggregationMode, displayedServices, selectedAccounts]);
+
   // Months selection (年月) - default: all selected
   const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
   const [monthFilter, setMonthFilter] = useState("");
@@ -421,12 +433,26 @@ export default function Home() {
     return selectedMonths;
   }, [selectedMonths]);
 
-  // filter chartData by selected months
+  // account-based chart data: per-month totals per account
+  const accountChartData = useMemo<ChartRow[]>(() => {
+    return sortedMonths.map((month) => {
+      const arr = reportsByMonth[month] ?? [];
+      const accountsMap: Record<string, number> = {};
+      (arr ?? []).forEach((r) => {
+        const key = r.accountId ?? r.fileName;
+        accountsMap[key] = (accountsMap[key] ?? 0) + (r.total ?? 0);
+      });
+      return { month, services: accountsMap };
+    });
+  }, [reportsByMonth, sortedMonths]);
+
+  // filter chartData by selected months and aggregation mode
   const filteredChartData = useMemo(() => {
     if (displayedMonths.length === 0) return [];
     const setMonths = new Set(displayedMonths);
-    return chartData.filter((row) => setMonths.has(row.month));
-  }, [chartData, displayedMonths]);
+    const source = aggregationMode === "service" ? chartData : accountChartData;
+    return source.filter((row) => setMonths.has(row.month));
+  }, [chartData, accountChartData, displayedMonths, aggregationMode]);
 
   /*
   const yearlyAggregation = useMemo(() => {
@@ -464,25 +490,39 @@ export default function Home() {
   */
 
   const totalCost = useMemo(() => {
-    // sum of costs for currently selected months, services and accounts
+    // sum of costs for currently selected months and series depending on mode
     if (!displayedMonths || displayedMonths.length === 0) return 0;
-    if (!displayedServices || displayedServices.length === 0) return 0;
+    if (!displayedSeries || displayedSeries.length === 0) return 0;
     if (!selectedAccounts || selectedAccounts.length === 0) return 0;
 
-    const allowed = new Set(selectedAccounts);
+    const allowedAccounts = new Set(selectedAccounts);
     let sum = 0;
     for (const month of displayedMonths) {
       const arr = reportsByMonth[month] ?? [];
       for (const report of arr) {
         const key = report.accountId ?? report.fileName;
-        if (selectedAccounts.length > 0 && !allowed.has(key)) continue;
-        for (const service of displayedServices) {
-          sum += Number(report.services[service] ?? 0);
+        if (selectedAccounts.length > 0 && !allowedAccounts.has(key)) continue;
+
+        if (aggregationMode === "service") {
+          for (const service of displayedSeries) {
+            sum += Number(report.services[service] ?? 0);
+          }
+        } else {
+          // account mode: count whole report.total for matching accounts
+          if (displayedSeries.includes(key)) {
+            sum += Number(report.total ?? 0);
+          }
         }
       }
     }
     return sum;
-  }, [reportsByMonth, displayedMonths, displayedServices, selectedAccounts]);
+  }, [
+    reportsByMonth,
+    displayedMonths,
+    displayedSeries,
+    selectedAccounts,
+    aggregationMode,
+  ]);
 
   return (
     <div className="min-h-screen bg-slate-950 pb-16 text-slate-100">
@@ -524,6 +564,32 @@ export default function Home() {
                 ヶ月分のデータを取り込み、サービス数は {services.length}{" "}
                 件です。
               </p>
+
+              {/* aggregation mode radio */}
+              <div className="mt-3 flex items-center gap-4">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="aggregation"
+                    value="service"
+                    checked={aggregationMode === "service"}
+                    onChange={() => setAggregationMode("service")}
+                    className="h-4 w-4"
+                  />
+                  <span className="text-slate-300">サービス別</span>
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="aggregation"
+                    value="account"
+                    checked={aggregationMode === "account"}
+                    onChange={() => setAggregationMode("account")}
+                    className="h-4 w-4"
+                  />
+                  <span className="text-slate-300">アカウント別</span>
+                </label>
+              </div>
 
               {/* Total cost row */}
               <div className="mt-4 flex w-full justify-center">
@@ -578,7 +644,7 @@ export default function Home() {
 
             <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-950/40 w-full">
               {filteredChartData.length === 0 ||
-              displayedServices.length === 0 ? (
+              displayedSeries.length === 0 ? (
                 <div className="flex h-80 w-full items-center justify-center text-sm text-slate-400">
                   まずは CSV ファイルをアップロードしてください。
                 </div>
@@ -586,8 +652,12 @@ export default function Home() {
                 <div className="h-[480px] w-full">
                   <StackedBarChart
                     data={filteredChartData}
-                    services={displayedServices}
-                    onLegendClick={toggleService}
+                    services={displayedSeries}
+                    onLegendClick={
+                      aggregationMode === "service"
+                        ? toggleService
+                        : toggleAccount
+                    }
                     showLegend={false}
                   />
                 </div>
