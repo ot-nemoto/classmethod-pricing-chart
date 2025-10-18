@@ -1,5 +1,9 @@
 # サービス別の月次料金チャート
 
+[![Pages](https://github.com/ot-nemoto/classmethod-pricing-chart/actions/workflows/deploy.yml/badge.svg)](https://github.com/ot-nemoto/classmethod-pricing-chart/actions/workflows/deploy.yml)
+[![Dependabot](https://github.com/ot-nemoto/classmethod-pricing-chart/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/ot-nemoto/classmethod-pricing-chart/actions/workflows/dependabot/dependabot-updates/)
+[![License](https://img.shields.io/github/license/ot-nemoto/classmethod-pricing-chart)](https://github.com/ot-nemoto/classmethod-pricing-chart/blob/master/LICENSE)
+
 Classmethod社の AWS 請求レポート（`monthly-report-YYYY-MM-ACCOUNTID.csv`）をブラウザにドラッグ＆ドロップするだけで、アカウントやサービス別に月次コストを可視化できる Next.js 製アプリケーションです。複数アカウント・複数月の比較や年次集計をワンビューで確認できます。
 
 ## クイックスタート (Try it)
@@ -50,22 +54,6 @@ id,month,invoice_id,aws_account_id,product_name,rate_id,subscription_id,pricing_
 14526016199,2021-03,726221193,114740378764,Amazon Simple Storage Service,,,,USE1-EUW2-AWS-Out-Bytes,ListAllMyBuckets,,N,$0.02 per GB - US East (Northern Virginia) data transfer to EU (London),0.0000152166,0.0200000000,0.0000003024,
 ```
 
-## ディレクトリ構造
-
-```
-src/
-├── app/
-│   ├── layout.tsx          # アプリ全体のレイアウト
-│   ├── page.tsx            # CSV 解析・グラフ表示のメインページ
-│   └── globals.css         # グローバルスタイル
-└── components/
-		├── UploadPanel.tsx     # アップロード UI と状態表示
-		├── AccountSelector.tsx  # アカウントフィルター
-		├── MonthSelector.tsx    # 月フィルター
-		├── ServiceSelector.tsx  # サービスフィルター
-		└── StackedBarChart.tsx  # Chart.js を使った積み上げ棒グラフ
-```
-
 ## 技術スタック
 
 - フレームワーク: Next.js 15 (App Router)
@@ -99,7 +87,3 @@ npm run build:static
 
 1. `npm run lint` でフォーマット・Lint を実行
 2. `npm run build` または `npm run build:static` でビルド検証
-
-## ライセンス
-
-現時点で本リポジトリには明示的なライセンスが含まれていません。
