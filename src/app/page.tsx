@@ -15,6 +15,11 @@ import MonthSelector from "@/components/MonthSelector";
 import ServiceSelector from "@/components/ServiceSelector";
 import StackedBarChart from "@/components/StackedBarChart";
 import UploadPanel from "@/components/UploadPanel";
+import {
+  extractAccountFromFileName,
+  extractMonthFromFileName,
+  normalizeCost,
+} from "@/lib/csv";
 
 type MonthlyReport = {
   month: string;
@@ -40,25 +45,6 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
-
-const extractMonthFromFileName = (fileName: string): string | null => {
-  const match = fileName.match(/monthly-report-(\d{4}-\d{2})-/);
-  return match ? match[1] : null;
-};
-
-const extractAccountFromFileName = (fileName: string): string | null => {
-  const match = fileName.match(/monthly-report-\d{4}-\d{2}-(\d+)\.csv$/);
-  return match ? match[1] : null;
-};
-
-const normalizeCost = (value: string | undefined): number => {
-  if (!value) {
-    return 0;
-  }
-  const normalized = value.replace(/[$,]/g, "");
-  const parsed = Number.parseFloat(normalized);
-  return Number.isFinite(parsed) ? parsed : 0;
-};
 
 const parseMonthlyReport = (file: File): Promise<ParseSuccess> =>
   new Promise((resolve, reject) => {
@@ -312,7 +298,7 @@ export default function Home() {
       const allowed = new Set(selectedAccounts);
       (arr ?? []).forEach((r) => {
         const key = r.accountId ?? r.fileName;
-        if (selectedAccounts.length > 0 && !allowed.has(key)) return;
+        if (hasInitializedAccounts.current && !allowed.has(key)) return;
         Object.entries(r.services).forEach(([svc, cost]) => {
           services[svc] = (services[svc] ?? 0) + cost;
         });
@@ -328,7 +314,7 @@ export default function Home() {
     Object.values(reportsByMonth).forEach((arr) => {
       (arr ?? []).forEach((report) => {
         const key = report.accountId ?? report.fileName;
-        if (selectedAccounts.length > 0 && !allowed.has(key)) return;
+        if (hasInitializedAccounts.current && !allowed.has(key)) return;
         Object.entries(report.services).forEach(([service, cost]) => {
           totals.set(service, (totals.get(service) ?? 0) + (cost as number));
         });
@@ -472,7 +458,8 @@ export default function Home() {
       if (!years[year]) years[year] = {};
       for (const report of arr) {
         const key = report.accountId ?? report.fileName;
-        if (selectedAccounts.length > 0 && !allowedAccounts.has(key)) continue;
+        if (hasInitializedAccounts.current && !allowedAccounts.has(key))
+          continue;
         // sum services (respect selectedServices: if none selected, sum 0)
         if (selectedServices.length > 0) {
           Object.entries(report.services).forEach(([svc, cost]) => {
@@ -584,7 +571,8 @@ export default function Home() {
     // sum of costs for currently selected months and series depending on mode
     if (!displayedMonths || displayedMonths.length === 0) return 0;
     if (!displayedSeries || displayedSeries.length === 0) return 0;
-    if (!selectedAccounts || selectedAccounts.length === 0) return 0;
+    if (hasInitializedAccounts.current && selectedAccounts.length === 0)
+      return 0;
 
     const allowedAccounts = new Set(selectedAccounts);
     let sum = 0;
@@ -592,7 +580,8 @@ export default function Home() {
       const arr = reportsByMonth[month] ?? [];
       for (const report of arr) {
         const key = report.accountId ?? report.fileName;
-        if (selectedAccounts.length > 0 && !allowedAccounts.has(key)) continue;
+        if (hasInitializedAccounts.current && !allowedAccounts.has(key))
+          continue;
 
         if (aggregationMode === "service") {
           for (const service of displayedSeries) {
