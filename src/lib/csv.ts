@@ -3,9 +3,7 @@ export const extractMonthFromFileName = (fileName: string): string | null => {
   return match ? match[1] : null;
 };
 
-export const extractAccountFromFileName = (
-  fileName: string,
-): string | null => {
+export const extractAccountFromFileName = (fileName: string): string | null => {
   const match = fileName.match(/monthly-report-\d{4}-\d{2}-(\d+)\.csv$/);
   return match ? match[1] : null;
 };

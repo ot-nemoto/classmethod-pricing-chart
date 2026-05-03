@@ -33,7 +33,9 @@ describe("extractAccountFromFileName", () => {
   });
 
   it("パターンに一致しないファイル名は null を返す", () => {
-    expect(extractAccountFromFileName("monthly-report-2024-03-.csv")).toBeNull();
+    expect(
+      extractAccountFromFileName("monthly-report-2024-03-.csv"),
+    ).toBeNull();
     expect(extractAccountFromFileName("billing.csv")).toBeNull();
     expect(extractAccountFromFileName("")).toBeNull();
   });

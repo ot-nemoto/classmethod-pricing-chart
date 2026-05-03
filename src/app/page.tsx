@@ -46,7 +46,6 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 2,
 });
 
-
 const parseMonthlyReport = (file: File): Promise<ParseSuccess> =>
   new Promise((resolve, reject) => {
     const month = extractMonthFromFileName(file.name);
