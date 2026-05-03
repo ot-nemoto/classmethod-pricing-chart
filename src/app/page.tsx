@@ -458,7 +458,8 @@ export default function Home() {
       if (!years[year]) years[year] = {};
       for (const report of arr) {
         const key = report.accountId ?? report.fileName;
-        if (hasInitializedAccounts.current && !allowedAccounts.has(key)) continue;
+        if (hasInitializedAccounts.current && !allowedAccounts.has(key))
+          continue;
         // sum services (respect selectedServices: if none selected, sum 0)
         if (selectedServices.length > 0) {
           Object.entries(report.services).forEach(([svc, cost]) => {
@@ -570,7 +571,8 @@ export default function Home() {
     // sum of costs for currently selected months and series depending on mode
     if (!displayedMonths || displayedMonths.length === 0) return 0;
     if (!displayedSeries || displayedSeries.length === 0) return 0;
-    if (hasInitializedAccounts.current && selectedAccounts.length === 0) return 0;
+    if (hasInitializedAccounts.current && selectedAccounts.length === 0)
+      return 0;
 
     const allowedAccounts = new Set(selectedAccounts);
     let sum = 0;
@@ -578,7 +580,8 @@ export default function Home() {
       const arr = reportsByMonth[month] ?? [];
       for (const report of arr) {
         const key = report.accountId ?? report.fileName;
-        if (hasInitializedAccounts.current && !allowedAccounts.has(key)) continue;
+        if (hasInitializedAccounts.current && !allowedAccounts.has(key))
+          continue;
 
         if (aggregationMode === "service") {
           for (const service of displayedSeries) {
