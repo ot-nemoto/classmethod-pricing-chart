@@ -15,6 +15,11 @@ import MonthSelector from "@/components/MonthSelector";
 import ServiceSelector from "@/components/ServiceSelector";
 import StackedBarChart from "@/components/StackedBarChart";
 import UploadPanel from "@/components/UploadPanel";
+import {
+  extractAccountFromFileName,
+  extractMonthFromFileName,
+  normalizeCost,
+} from "@/lib/csv";
 
 type MonthlyReport = {
   month: string;
@@ -41,24 +46,6 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 2,
 });
 
-const extractMonthFromFileName = (fileName: string): string | null => {
-  const match = fileName.match(/monthly-report-(\d{4}-\d{2})-/);
-  return match ? match[1] : null;
-};
-
-const extractAccountFromFileName = (fileName: string): string | null => {
-  const match = fileName.match(/monthly-report-\d{4}-\d{2}-(\d+)\.csv$/);
-  return match ? match[1] : null;
-};
-
-const normalizeCost = (value: string | undefined): number => {
-  if (!value) {
-    return 0;
-  }
-  const normalized = value.replace(/[$,]/g, "");
-  const parsed = Number.parseFloat(normalized);
-  return Number.isFinite(parsed) ? parsed : 0;
-};
 
 const parseMonthlyReport = (file: File): Promise<ParseSuccess> =>
   new Promise((resolve, reject) => {
