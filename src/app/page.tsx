@@ -298,7 +298,7 @@ export default function Home() {
       const allowed = new Set(selectedAccounts);
       (arr ?? []).forEach((r) => {
         const key = r.accountId ?? r.fileName;
-        if (!allowed.has(key)) return;
+        if (hasInitializedAccounts.current && !allowed.has(key)) return;
         Object.entries(r.services).forEach(([svc, cost]) => {
           services[svc] = (services[svc] ?? 0) + cost;
         });
@@ -458,7 +458,7 @@ export default function Home() {
       if (!years[year]) years[year] = {};
       for (const report of arr) {
         const key = report.accountId ?? report.fileName;
-        if (!allowedAccounts.has(key)) continue;
+        if (hasInitializedAccounts.current && !allowedAccounts.has(key)) continue;
         // sum services (respect selectedServices: if none selected, sum 0)
         if (selectedServices.length > 0) {
           Object.entries(report.services).forEach(([svc, cost]) => {
