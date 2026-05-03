@@ -2,11 +2,11 @@
 
 ## フェーズ構成
 
-| フェーズ | 内容 | 状態 |
-|---------|------|------|
-| Phase 1: 開発基盤整備 | CI/CD・ワークフロー・開発環境の整備 | 完了 |
-| Phase 2: ドキュメント整備 | CLAUDE.md に準拠したドキュメント構成の整備 | 進行中 |
-| Phase 3: 機能拡張 | 今後の機能追加・改善 | 未着手 |
+| フェーズ | 内容 | 状態 | マイルストーン |
+|---------|------|------|--------------|
+| Phase 1: 開発基盤整備 | CI/CD・ワークフロー・開発環境の整備 | 完了 | [milestone/1](https://github.com/ot-nemoto/classmethod-pricing-chart/milestone/1) |
+| Phase 2: ドキュメント整備 | CLAUDE.md に準拠したドキュメント構成の整備 | 進行中 | [milestone/2](https://github.com/ot-nemoto/classmethod-pricing-chart/milestone/2) |
+| Phase 3: 機能拡張 | 今後の機能追加・改善 | 未着手 | [milestone/3](https://github.com/ot-nemoto/classmethod-pricing-chart/milestone/3) |
 
 ## Phase 1: 開発基盤整備（完了）
 
