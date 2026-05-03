@@ -314,7 +314,7 @@ export default function Home() {
     Object.values(reportsByMonth).forEach((arr) => {
       (arr ?? []).forEach((report) => {
         const key = report.accountId ?? report.fileName;
-        if (!allowed.has(key)) return;
+        if (hasInitializedAccounts.current && !allowed.has(key)) return;
         Object.entries(report.services).forEach(([service, cost]) => {
           totals.set(service, (totals.get(service) ?? 0) + (cost as number));
         });
