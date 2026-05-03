@@ -75,7 +75,7 @@ graph TD
 
 | コンポーネント | ファイル | 役割 | 主な Props |
 |--------------|---------|------|-----------|
-| `UploadPanel` | `src/components/UploadPanel.tsx` | ファイルアップロード UI・エラー・警告表示 | `onFileChange`, `onDrop`, `isDragActive`, `isParsing`, `errorMessage`, `warnings` |
+| `UploadPanel` | `src/components/UploadPanel.tsx` | ファイルアップロード UI・エラー・警告表示 | `fileInputRef`, `onFileChange`, `onBrowseClick`, `onDragOver`, `onDragLeave`, `onDrop`, `isDragActive`, `isParsing`, `errorMessage`, `warnings`, `sortedMonths`, `onClearReports` |
 | `AccountSelector` | `src/components/AccountSelector.tsx` | アカウントフィルター | `filteredAccounts`, `selectedAccounts`, `toggleAccount`, `selectAllAccounts`, `clearSelectedAccounts`, `accountFilter`, `setAccountFilter` |
 | `MonthSelector` | `src/components/MonthSelector.tsx` | 年月フィルター | `filteredMonths`, `selectedMonths`, `toggleMonth`, `selectAllMonths`, `clearSelectedMonths`, `monthFilter`, `setMonthFilter` |
 | `ServiceSelector` | `src/components/ServiceSelector.tsx` | サービスフィルター・Top10 | `filteredServices`, `selectedServices`, `toggleService`, `selectAllServices`, `selectTop10`, `clearSelectedServices`, `serviceFilter`, `setServiceFilter` |
