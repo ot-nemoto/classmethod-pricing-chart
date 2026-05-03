@@ -298,7 +298,7 @@ export default function Home() {
       const allowed = new Set(selectedAccounts);
       (arr ?? []).forEach((r) => {
         const key = r.accountId ?? r.fileName;
-        if (selectedAccounts.length > 0 && !allowed.has(key)) return;
+        if (!allowed.has(key)) return;
         Object.entries(r.services).forEach(([svc, cost]) => {
           services[svc] = (services[svc] ?? 0) + cost;
         });
@@ -314,7 +314,7 @@ export default function Home() {
     Object.values(reportsByMonth).forEach((arr) => {
       (arr ?? []).forEach((report) => {
         const key = report.accountId ?? report.fileName;
-        if (selectedAccounts.length > 0 && !allowed.has(key)) return;
+        if (!allowed.has(key)) return;
         Object.entries(report.services).forEach(([service, cost]) => {
           totals.set(service, (totals.get(service) ?? 0) + (cost as number));
         });
@@ -458,7 +458,7 @@ export default function Home() {
       if (!years[year]) years[year] = {};
       for (const report of arr) {
         const key = report.accountId ?? report.fileName;
-        if (selectedAccounts.length > 0 && !allowedAccounts.has(key)) continue;
+        if (!allowedAccounts.has(key)) continue;
         // sum services (respect selectedServices: if none selected, sum 0)
         if (selectedServices.length > 0) {
           Object.entries(report.services).forEach(([svc, cost]) => {
@@ -578,7 +578,7 @@ export default function Home() {
       const arr = reportsByMonth[month] ?? [];
       for (const report of arr) {
         const key = report.accountId ?? report.fileName;
-        if (selectedAccounts.length > 0 && !allowedAccounts.has(key)) continue;
+        if (!allowedAccounts.has(key)) continue;
 
         if (aggregationMode === "service") {
           for (const service of displayedSeries) {
