@@ -79,7 +79,7 @@ graph TD
 | `AccountSelector` | `src/components/AccountSelector.tsx` | アカウントフィルター | `filteredAccounts`, `selectedAccounts`, `toggleAccount`, `selectAllAccounts`, `clearSelectedAccounts`, `accountFilter`, `setAccountFilter` |
 | `MonthSelector` | `src/components/MonthSelector.tsx` | 年月フィルター | `filteredMonths`, `selectedMonths`, `toggleMonth`, `selectAllMonths`, `clearSelectedMonths`, `monthFilter`, `setMonthFilter` |
 | `ServiceSelector` | `src/components/ServiceSelector.tsx` | サービスフィルター・Top10 | `filteredServices`, `selectedServices`, `toggleService`, `selectAllServices`, `selectTop10`, `clearSelectedServices`, `serviceFilter`, `setServiceFilter` |
-| `StackedBarChart` | `src/components/StackedBarChart.tsx` | Chart.js 積み上げ棒グラフ・合計値オーバーレイ | `data`, `services`, `onLegendClick`, `showLegend` |
+| `StackedBarChart` | `src/components/StackedBarChart.tsx` | Chart.js 積み上げ棒グラフ・合計値オーバーレイ | `data`, `services`, `onLegendClick`, `showLegend`, `sumPosition?: "top" \| "bottom"` (default: `"top"`) |
 
 ## UI 規約
 
