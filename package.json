@@ -14,14 +14,14 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "chart.js": "4.4.7",
-    "next": "15.5.4",
-    "papaparse": "5.4.1",
-    "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "chart.js": "4.5.1",
+    "next": "16.2.4",
+    "papaparse": "5.5.3",
+    "react": "19.2.5",
+    "react-dom": "19.2.5"
   },
   "devDependencies": {
-    "@types/papaparse": "5.3.16",
+    "@types/papaparse": "5.5.2",
     "typescript": "^6",
     "@types/node": "^25",
     "@types/react": "^19",
