@@ -39,6 +39,14 @@ type ChartRow = {
   services: Record<string, number>;
 };
 
+// カラム欠損時に reject で投げる専用エラー（processFiles 側で warnings に振り分ける）
+class ColumnWarning extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ColumnWarning";
+  }
+}
+
 const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
@@ -76,6 +84,20 @@ const parseMonthlyReport = (file: File): Promise<ParseSuccess> =>
 
           services[service] = (services[service] ?? 0) + cost;
           total += cost;
+        }
+
+        // check for required columns; reject as ColumnWarning to skip report registration
+        const fields = results.meta.fields ?? [];
+        const missingColumns = (["product_name", "cost"] as const).filter(
+          (col) => !fields.includes(col),
+        );
+        if (missingColumns.length > 0) {
+          reject(
+            new ColumnWarning(
+              `「${file.name}」: 必須カラム（${missingColumns.join(", ")}）が見つかりません。データは取り込まれませんでした。`,
+            ),
+          );
+          return;
         }
 
         const warnings =
@@ -147,11 +169,15 @@ export default function Home() {
           nextWarnings.push(...result.value.warnings);
         } else {
           const reason = result.reason;
-          failures.push(
-            reason instanceof Error
-              ? reason.message
-              : `「${fileName}」の取り込み中に不明なエラーが発生しました。`,
-          );
+          if (reason instanceof ColumnWarning) {
+            nextWarnings.push(reason.message);
+          } else {
+            failures.push(
+              reason instanceof Error
+                ? reason.message
+                : `「${fileName}」の取り込み中に不明なエラーが発生しました。`,
+            );
+          }
         }
       });
 
@@ -265,11 +291,20 @@ export default function Home() {
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
   const [accountFilter, setAccountFilter] = useState("");
   const hasInitializedAccounts = useRef(false);
+  const prevAccountsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
-    if (!hasInitializedAccounts.current && accounts.length > 0) {
-      setSelectedAccounts([...accounts]);
-      hasInitializedAccounts.current = true;
+    const newAccounts = accounts.filter((a) => !prevAccountsRef.current.has(a));
+    if (newAccounts.length > 0) {
+      setSelectedAccounts((prev) => {
+        const prevSet = new Set(prev);
+        const toAdd = newAccounts.filter((a) => !prevSet.has(a));
+        return toAdd.length > 0 ? [...prev, ...toAdd] : prev;
+      });
+      if (!hasInitializedAccounts.current) {
+        hasInitializedAccounts.current = true;
+      }
     }
+    prevAccountsRef.current = new Set(accounts);
   }, [accounts]);
 
   const toggleAccount = useCallback((acc: string) => {
@@ -328,12 +363,23 @@ export default function Home() {
 
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [serviceFilter, setServiceFilter] = useState("");
-  // default: select all services when services first become available
+  // default: select all services when services first become available; auto-select newly added services
+  // allKnownServicesRef grows only (never shrinks) to avoid re-selecting services the user intentionally
+  // deselected when they temporarily disappear due to account filter changes.
   const hasInitializedServices = useRef(false);
+  const allKnownServicesRef = useRef<Set<string>>(new Set());
   useEffect(() => {
-    if (!hasInitializedServices.current && services.length > 0) {
-      setSelectedServices([...services]);
-      hasInitializedServices.current = true;
+    const newSvcs = services.filter((s) => !allKnownServicesRef.current.has(s));
+    if (newSvcs.length > 0) {
+      setSelectedServices((prev) => {
+        const prevSet = new Set(prev);
+        const toAdd = newSvcs.filter((s) => !prevSet.has(s));
+        return toAdd.length > 0 ? [...prev, ...toAdd] : prev;
+      });
+      for (const s of newSvcs) allKnownServicesRef.current.add(s);
+      if (!hasInitializedServices.current) {
+        hasInitializedServices.current = true;
+      }
     }
   }, [services]);
 
@@ -388,13 +434,22 @@ export default function Home() {
   const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
   const [monthFilter, setMonthFilter] = useState("");
 
-  // default: select all months when months first become available
+  // default: select all months when months first become available; auto-select newly added months
   const hasInitializedMonths = useRef(false);
+  const prevMonthsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
-    if (!hasInitializedMonths.current && sortedMonths.length > 0) {
-      setSelectedMonths([...sortedMonths]);
-      hasInitializedMonths.current = true;
+    const newMonths = sortedMonths.filter((m) => !prevMonthsRef.current.has(m));
+    if (newMonths.length > 0) {
+      setSelectedMonths((prev) => {
+        const prevSet = new Set(prev);
+        const toAdd = newMonths.filter((m) => !prevSet.has(m));
+        return toAdd.length > 0 ? [...prev, ...toAdd] : prev;
+      });
+      if (!hasInitializedMonths.current) {
+        hasInitializedMonths.current = true;
+      }
     }
+    prevMonthsRef.current = new Set(sortedMonths);
   }, [sortedMonths]);
 
   const toggleMonth = useCallback((month: string) => {

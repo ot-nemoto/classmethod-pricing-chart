@@ -35,7 +35,7 @@ export default function StackedBarChart({
   sumPosition?: "top" | "bottom";
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const chartRef = useRef<ChartJS | null>(null);
+  const chartRef = useRef<ChartJS<"bar"> | null>(null);
 
   const colors = useMemo(
     () => services.map((_, index) => generateColor(index)),

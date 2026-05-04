@@ -92,7 +92,7 @@ export default function UploadPanel({
         )}
         {sortedMonths.length > 0 && (
           <div className="flex flex-wrap items-center gap-3 text-sm text-slate-300">
-            <span>{sortedMonths.length} 件の月次レポートを表示中</span>
+            <span>{sortedMonths.length} ヶ月分のデータを表示中</span>
             <button
               type="button"
               onClick={onClearReports}

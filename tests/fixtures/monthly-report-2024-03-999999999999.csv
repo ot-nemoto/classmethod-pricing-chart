@@ -1,0 +1,9 @@
+product_name,cost,description
+Amazon EC2,2100.00,Compute
+Amazon S3,310.00,Storage
+Amazon RDS,640.00,Database
+AWS Lambda,95.00,Serverless
+Amazon CloudFront,55.00,CDN
+Amazon EKS,430.00,Kubernetes
+Amazon DynamoDB,175.00,NoSQL
+Amazon CloudWatch,60.00,Monitoring
