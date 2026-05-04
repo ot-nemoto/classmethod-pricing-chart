@@ -39,6 +39,14 @@ type ChartRow = {
   services: Record<string, number>;
 };
 
+// カラム欠損時に reject で投げる専用エラー（processFiles 側で warnings に振り分ける）
+class ColumnWarning extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ColumnWarning";
+  }
+}
+
 const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
@@ -78,19 +86,21 @@ const parseMonthlyReport = (file: File): Promise<ParseSuccess> =>
           total += cost;
         }
 
-        // check for required columns
+        // check for required columns; reject as ColumnWarning to skip report registration
         const fields = results.meta.fields ?? [];
         const missingColumns = (["product_name", "cost"] as const).filter(
           (col) => !fields.includes(col),
         );
-        const columnWarnings =
-          missingColumns.length > 0
-            ? [
-                `「${file.name}」: 必須カラム（${missingColumns.join(", ")}）が見つかりません。データは取り込まれませんでした。`,
-              ]
-            : [];
+        if (missingColumns.length > 0) {
+          reject(
+            new ColumnWarning(
+              `「${file.name}」: 必須カラム（${missingColumns.join(", ")}）が見つかりません。データは取り込まれませんでした。`,
+            ),
+          );
+          return;
+        }
 
-        const parseErrors =
+        const warnings =
           results.errors.length > 0
             ? results.errors.slice(0, 5).map((error: Papa.ParseError) => {
                 const rowLabel =
@@ -100,8 +110,6 @@ const parseMonthlyReport = (file: File): Promise<ParseSuccess> =>
                 return `「${file.name}」${rowLabel}: ${error.message}`;
               })
             : [];
-
-        const warnings = [...columnWarnings, ...parseErrors];
 
         resolve({
           report: {
@@ -161,11 +169,15 @@ export default function Home() {
           nextWarnings.push(...result.value.warnings);
         } else {
           const reason = result.reason;
-          failures.push(
-            reason instanceof Error
-              ? reason.message
-              : `「${fileName}」の取り込み中に不明なエラーが発生しました。`,
-          );
+          if (reason instanceof ColumnWarning) {
+            nextWarnings.push(reason.message);
+          } else {
+            failures.push(
+              reason instanceof Error
+                ? reason.message
+                : `「${fileName}」の取り込み中に不明なエラーが発生しました。`,
+            );
+          }
         }
       });
 
