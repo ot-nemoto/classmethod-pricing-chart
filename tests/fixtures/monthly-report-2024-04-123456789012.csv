@@ -1,0 +1,16 @@
+product_name,cost,description
+Amazon EC2,1350.00,Compute
+Amazon S3,480.00,Storage
+Amazon RDS,810.00,Database
+AWS Lambda,130.00,Serverless
+Amazon CloudFront,72.00,CDN
+Amazon Route 53,13.00,DNS
+AWS WAF,36.00,Security
+Amazon SES,6.00,Email
+Amazon SNS,9.50,Messaging
+Amazon SQS,12.00,Queue
+Amazon DynamoDB,250.00,NoSQL
+Amazon EKS,580.00,Kubernetes
+Amazon ECR,25.00,Container Registry
+AWS CloudTrail,48.00,Audit
+Amazon CloudWatch,92.00,Monitoring
