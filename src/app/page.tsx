@@ -265,11 +265,20 @@ export default function Home() {
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
   const [accountFilter, setAccountFilter] = useState("");
   const hasInitializedAccounts = useRef(false);
+  const prevAccountsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
-    if (!hasInitializedAccounts.current && accounts.length > 0) {
-      setSelectedAccounts([...accounts]);
-      hasInitializedAccounts.current = true;
+    const newAccounts = accounts.filter((a) => !prevAccountsRef.current.has(a));
+    if (newAccounts.length > 0) {
+      setSelectedAccounts((prev) => {
+        const prevSet = new Set(prev);
+        const toAdd = newAccounts.filter((a) => !prevSet.has(a));
+        return toAdd.length > 0 ? [...prev, ...toAdd] : prev;
+      });
+      if (!hasInitializedAccounts.current) {
+        hasInitializedAccounts.current = true;
+      }
     }
+    prevAccountsRef.current = new Set(accounts);
   }, [accounts]);
 
   const toggleAccount = useCallback((acc: string) => {
@@ -328,13 +337,22 @@ export default function Home() {
 
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [serviceFilter, setServiceFilter] = useState("");
-  // default: select all services when services first become available
+  // default: select all services when services first become available; auto-select newly added services
   const hasInitializedServices = useRef(false);
+  const prevServicesRef = useRef<Set<string>>(new Set());
   useEffect(() => {
-    if (!hasInitializedServices.current && services.length > 0) {
-      setSelectedServices([...services]);
-      hasInitializedServices.current = true;
+    const newSvcs = services.filter((s) => !prevServicesRef.current.has(s));
+    if (newSvcs.length > 0) {
+      setSelectedServices((prev) => {
+        const prevSet = new Set(prev);
+        const toAdd = newSvcs.filter((s) => !prevSet.has(s));
+        return toAdd.length > 0 ? [...prev, ...toAdd] : prev;
+      });
+      if (!hasInitializedServices.current) {
+        hasInitializedServices.current = true;
+      }
     }
+    prevServicesRef.current = new Set(services);
   }, [services]);
 
   const toggleService = useCallback((service: string) => {
@@ -388,13 +406,22 @@ export default function Home() {
   const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
   const [monthFilter, setMonthFilter] = useState("");
 
-  // default: select all months when months first become available
+  // default: select all months when months first become available; auto-select newly added months
   const hasInitializedMonths = useRef(false);
+  const prevMonthsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
-    if (!hasInitializedMonths.current && sortedMonths.length > 0) {
-      setSelectedMonths([...sortedMonths]);
-      hasInitializedMonths.current = true;
+    const newMonths = sortedMonths.filter((m) => !prevMonthsRef.current.has(m));
+    if (newMonths.length > 0) {
+      setSelectedMonths((prev) => {
+        const prevSet = new Set(prev);
+        const toAdd = newMonths.filter((m) => !prevSet.has(m));
+        return toAdd.length > 0 ? [...prev, ...toAdd] : prev;
+      });
+      if (!hasInitializedMonths.current) {
+        hasInitializedMonths.current = true;
+      }
     }
+    prevMonthsRef.current = new Set(sortedMonths);
   }, [sortedMonths]);
 
   const toggleMonth = useCallback((month: string) => {
