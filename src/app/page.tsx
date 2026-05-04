@@ -338,21 +338,23 @@ export default function Home() {
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [serviceFilter, setServiceFilter] = useState("");
   // default: select all services when services first become available; auto-select newly added services
+  // allKnownServicesRef grows only (never shrinks) to avoid re-selecting services the user intentionally
+  // deselected when they temporarily disappear due to account filter changes.
   const hasInitializedServices = useRef(false);
-  const prevServicesRef = useRef<Set<string>>(new Set());
+  const allKnownServicesRef = useRef<Set<string>>(new Set());
   useEffect(() => {
-    const newSvcs = services.filter((s) => !prevServicesRef.current.has(s));
+    const newSvcs = services.filter((s) => !allKnownServicesRef.current.has(s));
     if (newSvcs.length > 0) {
       setSelectedServices((prev) => {
         const prevSet = new Set(prev);
         const toAdd = newSvcs.filter((s) => !prevSet.has(s));
         return toAdd.length > 0 ? [...prev, ...toAdd] : prev;
       });
+      for (const s of newSvcs) allKnownServicesRef.current.add(s);
       if (!hasInitializedServices.current) {
         hasInitializedServices.current = true;
       }
     }
-    prevServicesRef.current = new Set(services);
   }, [services]);
 
   const toggleService = useCallback((service: string) => {
