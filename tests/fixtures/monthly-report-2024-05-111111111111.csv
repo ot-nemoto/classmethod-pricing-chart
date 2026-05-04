@@ -1,0 +1,3 @@
+service_name,amount,description
+Amazon EC2,100.00,Compute
+Amazon S3,50.00,Storage
