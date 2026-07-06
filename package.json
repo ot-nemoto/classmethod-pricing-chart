@@ -29,7 +29,7 @@
     "@types/react-dom": "^19",
     "@tailwindcss/postcss": "^4",
     "tailwindcss": "^4",
-    "@biomejs/biome": "2.5.1",
+    "@biomejs/biome": "2.5.2",
     "cross-env": "10.1.0",
     "vitest": "^4",
     "@vitest/coverage-v8": "^4"
