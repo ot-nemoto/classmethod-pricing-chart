@@ -15,34 +15,41 @@ graph TD
     B -->|クリアボタン| A
 ```
 
-## 画面機能仕様
+## 機能仕様
 
-### メイン画面
+画面は上から順に、ヘッダー → アップロードパネル → 集計サマリ（集計モード切替・時間軸切替・合計金額・3 つのフィルター・積み上げ棒グラフ）で構成する。
 
-#### アップロードパネル（UploadPanel）
+### CSV インポート
 
-| 操作 | 挙動 |
+| 項目 | 契約 |
 |------|------|
-| ファイルをドラッグ＆ドロップ | CSV をパースしてデータを追加 |
-| 「ファイルを選択」クリック | ファイル選択ダイアログを開く |
-| 同一アカウント・同一月のファイルを再アップロード | 既存データを上書き更新 |
-| 「クリア」クリック | 全データ・エラー・警告を初期化 |
+| ファイル名形式 | `monthly-report-YYYY-MM-ACCOUNTID.csv`。年月（YYYY-MM）と AWS アカウント ID をファイル名から自動抽出する |
+| 複数アップロード | ドラッグ＆ドロップまたはファイル選択で複数ファイルを同時に取り込める |
+| 上書き更新 | 同一アカウント・同一月のファイルを再アップロードすると上書き更新する（重複させない） |
+| 必須カラム | `product_name`、`cost`（`$` や `,` を含む文字列も正規化して数値変換する） |
+| カラム欠損時 | 警告を表示し、そのファイルのデータは取り込まない |
+| エラー・警告表示 | パースエラーは画面上に表示。警告は最大 5 件まで表示する |
 
-#### 集計サマリセクション
+### フィルタリング
 
-| 要素 | 説明 |
-|------|------|
-| 集計モード切替（ラジオボタン） | 「サービス別」「アカウント別」を切り替え |
-| 時間軸切替（ラジオボタン） | 「月次」「年次」を切り替え |
-| 合計金額 | 現在の選択条件に応じた USD 合計をリアルタイム表示 |
-| アカウントフィルター | チェックボックス・テキスト検索・全選択・全解除 |
-| 年月フィルター | チェックボックス・テキスト検索・全選択・全解除 |
-| サービスフィルター | チェックボックス・テキスト検索・全選択・Top10・全解除 |
-| 積み上げ棒グラフ | 選択条件を反映した Chart.js グラフ |
+- アカウント・年月・サービスをチェックボックスで絞り込む
+- 各フィルターにテキスト検索欄を持つ
+- 各フィルターに全選択・全解除ボタンを持つ
+- サービスフィルターはコスト上位を一括選択する「Top10」ボタンを持つ
+
+### 集計・チャート表示
+
+- フィルター条件に応じた積み上げ棒グラフをリアルタイムで更新する
+- 集計モードを「サービス別」「アカウント別」で切り替えられる
+- 時間軸を「月次」「年次」で切り替えられる
+- 選択条件の合計金額を USD でリアルタイム表示する
+
+### データ管理
+
+- 「クリア」ボタンで全読み込みデータ・エラー・警告を初期化する
+- 追加アップロードで既存データに差分追加する
 
 ## 各画面の表示状態
-
-### メイン画面
 
 | 状態 | 表示内容 |
 |------|---------|
@@ -52,34 +59,6 @@ graph TD
 | **エラー（Error）** | アップロードパネル内にエラーメッセージを表示 |
 | **警告あり（Warning）** | アップロードパネル内に最大 5 件の警告を表示 |
 | **フィルターで全解除** | チャートエリアに空グラフが表示される（データなし状態） |
-
-## レイアウト構成
-
-```
-<div> min-h-screen bg-slate-950
-  <div> max-w-7xl mx-auto px-4 pt-16
-    <header>          # タイトル・説明文
-    <UploadPanel>     # アップロードエリア・エラー・警告
-    <section>         # 集計サマリ
-      集計モード切替
-      時間軸切替
-      合計金額カード
-      <div> grid-cols-3
-        <AccountSelector>
-        <MonthSelector>
-        <ServiceSelector>
-      <StackedBarChart>
-```
-
-## コンポーネント一覧
-
-| コンポーネント | ファイル | 役割 | 主な Props |
-|--------------|---------|------|-----------|
-| `UploadPanel` | `src/components/UploadPanel.tsx` | ファイルアップロード UI・エラー・警告表示 | `fileInputRef`, `onFileChange`, `onBrowseClick`, `onDragOver`, `onDragLeave`, `onDrop`, `isDragActive`, `isParsing`, `errorMessage`, `warnings`, `sortedMonths`, `onClearReports` |
-| `AccountSelector` | `src/components/AccountSelector.tsx` | アカウントフィルター | `filteredAccounts`, `selectedAccounts`, `toggleAccount`, `selectAllAccounts`, `clearSelectedAccounts`, `accountFilter`, `setAccountFilter` |
-| `MonthSelector` | `src/components/MonthSelector.tsx` | 年月フィルター | `filteredMonths`, `selectedMonths`, `toggleMonth`, `selectAllMonths`, `clearSelectedMonths`, `monthFilter`, `setMonthFilter` |
-| `ServiceSelector` | `src/components/ServiceSelector.tsx` | サービスフィルター・Top10 | `filteredServices`, `selectedServices`, `toggleService`, `selectAllServices`, `selectTop10`, `clearSelectedServices`, `serviceFilter`, `setServiceFilter` |
-| `StackedBarChart` | `src/components/StackedBarChart.tsx` | Chart.js 積み上げ棒グラフ・合計値オーバーレイ | `data`, `services`, `onLegendClick`, `showLegend`, `sumPosition?: "top" \| "bottom"` (default: `"top"`) |
 
 ## UI 規約
 
@@ -91,3 +70,5 @@ graph TD
 | ボーダー | `border-slate-800` で統一 |
 | テキスト | 基本 `text-slate-100`、補足 `text-slate-300`、ヒント `text-slate-400` |
 | インタラクション | ホバー時に `bg-slate-800` でハイライト |
+
+> 画面を構成するコンポーネントの一覧・Props は `src/components/` および `src/app/page.tsx` を正とする。
