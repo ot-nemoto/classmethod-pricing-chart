@@ -4,14 +4,14 @@
 
 | カテゴリ | 技術 | 選定理由 |
 |---------|------|---------|
-| フレームワーク | Next.js 15 (App Router) | 静的エクスポート対応・React 19 サポート |
-| 言語 | TypeScript 5 | 型安全性・IDE サポート |
+| フレームワーク | Next.js 16 (App Router) | 静的エクスポート対応・React 19 サポート |
+| 言語 | TypeScript 6 | 型安全性・IDE サポート |
 | UI | React 19 | Next.js との統合 |
 | CSV パース | Papaparse 5 | ブラウザ対応・ストリーミング解析 |
 | チャート | Chart.js 4 | 軽量・カスタムプラグイン対応 |
 | スタイル | Tailwind CSS 4 | ユーティリティファースト・ビルドサイズ最適化 |
 | Lint/Format | Biome 2 | ESLint + Prettier の代替・高速 |
-| テスト | Vitest 3 | Vite ベース・TypeScript ネイティブ対応 |
+| テスト | Vitest 4 | Vite ベース・TypeScript ネイティブ対応 |
 | ビルド補助 | cross-env | Windows/Unix 両環境での環境変数設定 |
 
 ## ディレクトリ構成
@@ -42,6 +42,23 @@ classmethod-pricing-chart/
 ├── biome.json                  # Biome Lint/Format 設定
 └── package.json
 ```
+
+## バージョン固有の実装決定
+
+### TypeScript 6 + CSS サイドエフェクトインポート
+
+TypeScript 6 + `moduleResolution: "bundler"` 環境では、CSS のサイドエフェクトインポートに型宣言が必要。
+`tsconfig.json` に `"allowArbitraryExtensions": true` を設定し、`src/app/globals.css.d.ts`（`export {}`）を配置することで対応。
+`declare module "*.css"` のブランケット宣言は採用しない（型安全性が落ちるため）。
+
+### chart.js 4.5.1 型変更
+
+chart.js 4.5.1 で型の variance が変更され、汎用型 `ChartJS` は `Chart<keyof ChartTypeRegistry>` に非代入となった。
+`StackedBarChart.tsx` では `useRef<ChartJS<"bar">>` を使用して型を明示する。
+
+### Biome 2 + Tailwind CSS v4
+
+Tailwind CSS v4 の `@theme inline` 構文を Biome がパースできるよう、`biome.json` に `css.parser.tailwindDirectives: true` を設定。
 
 ## 環境変数
 
