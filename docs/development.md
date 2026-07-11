@@ -52,7 +52,22 @@ Node.js 24・Claude Code・GitHub CLI がプリインストールされる。
 
 ## デプロイ手順
 
-デプロイは GitHub Actions が自動で行う。詳細は [docs/infra.md](infra.md) を参照。
+デプロイは GitHub Actions が自動で行う（各ワークフローの実トリガー・処理内容は `.github/workflows/*.yml` を正とする）。
+
+| 環境 | ブランチ | 用途 |
+|------|---------|------|
+| 開発 | `develop` | 機能開発・GitHub Pages デプロイ元 |
+| 本番 | `master` | リリース管理・バージョンタグ |
+
+### 自動デプロイ（通常運用）
+
+`develop` ブランチに push するだけで GitHub Pages へ自動デプロイされる。
+
+### 手動トリガー
+
+GitHub Actions の画面から `deploy-github-pages.yml` を手動実行できる:
+
+1. Actions タブ →「Deploy to GitHub Pages」→「Run workflow」
 
 ### 手動で静的ビルドを確認する場合
 
@@ -61,3 +76,17 @@ npm run build:static
 # out/ ディレクトリに静的ファイルが生成される
 npx serve out/
 ```
+
+## リリースフロー
+
+1. `develop` で開発・PR マージを繰り返す
+2. 毎朝 6:00 JST に `auto-pr-to-master.yml` が差分を検出し `develop → master` の PR を自動作成・更新
+3. PR に `bump:minor`（新機能）または `bump:patch`（修正）ラベルが付く
+4. ラベル付与を検知した `bump-version.yml` がバージョンをバンプし、バンプコミットをブランチへ push
+5. PR をマージすると `master` への push で `release.yml` が GitHub Release を自動作成
+
+## 必要なシークレット
+
+| シークレット名 | 用途 | 登録場所 |
+|--------------|------|---------|
+| `AUTO_PR_TOKEN` | `auto-pr-to-master.yml` で PR 作成に使用する PAT | Settings > Secrets and variables > Actions |
