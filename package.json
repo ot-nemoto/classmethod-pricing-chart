@@ -1,6 +1,6 @@
 {
   "name": "classmethod-pricing-chart",
-  "version": "0.3.19",
+  "version": "0.3.20",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "chart.js": "4.5.1",
-    "next": "16.3.3",
+    "next": "16.3.4",
     "papaparse": "5.7.0",
     "react": "19.2.8",
     "react-dom": "19.2.8"
@@ -29,9 +29,9 @@
     "@types/react-dom": "^19",
     "@tailwindcss/postcss": "^4",
     "tailwindcss": "^4",
-    "@biomejs/biome": "2.5.11",
+    "@biomejs/biome": "2.5.12",
     "cross-env": "10.1.0",
-    "vitest": "^4",
-    "@vitest/coverage-v8": "^4"
+    "vitest": "^5",
+    "@vitest/coverage-v8": "^5"
   }
 }
